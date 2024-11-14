@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-const review = require("./review");
-const Review=require("./review.js");
-const { required } = require("joi");
+const Review = require("./review"); 
 const Schema = mongoose.Schema;
 
 const listingSchema = new Schema({
@@ -12,7 +10,7 @@ const listingSchema = new Schema({
   description: String,
   image: {
     url: String,
-    filename: String
+    filename: String,
   },
   price: Number,
   location: String,
@@ -21,28 +19,32 @@ const listingSchema = new Schema({
     {
       type: Schema.Types.ObjectId,
       ref: "Review",
-    }
-  ],
-  owner:{
-    type: Schema.Types.ObjectId,
-    ref:"User",
-  },
-  geometry:{
-    type:{
-      type: String,
-      enum: ['Point'],
-      required: true
     },
-    coordinates:{
+  ],
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
+  geometry: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
       type: [Number],
-      required: true
-    }
-  }
+      required: true,
+    },
+  },
 });
 
-listingSchema.post("findOneAndDelete", async (listing)=>{
-  if(listing){
-    await Review.deleteMany({_id: {$in: listing.reviews}});
+// Create a geospatial index for the geometry field
+listingSchema.index({ geometry: "2dsphere" });
+
+// Post hook to delete associated reviews when listing is deleted
+listingSchema.post("findOneAndDelete", async (listing) => {
+  if (listing) {
+    await Review.deleteMany({ _id: { $in: listing.reviews } });
   }
 });
 
